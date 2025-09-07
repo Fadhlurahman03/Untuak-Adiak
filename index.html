@@ -171,12 +171,20 @@
 
         // --- Logika Tombol Kabur ---
         const noButton = document.getElementById('noButton');
-        noButton.addEventListener('mouseover', () => {
+        
+        function runAway() {
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             noButton.style.top = `${Math.random() * (viewportHeight - noButton.offsetHeight)}px`;
             noButton.style.left = `${Math.random() * (viewportWidth - noButton.offsetWidth)}px`;
-        });
+        }
+        
+        // Event untuk desktop (saat kursor mendekat)
+        noButton.addEventListener('mouseover', runAway);
+        
+        // --- BARIS INI SOLUSINYA ---
+        // Event untuk mobile (saat jari pertama kali menyentuh)
+        noButton.addEventListener('touchstart', runAway);
         
         // --- Logika Level 2: Pengakuan ---
         const confessionInput = document.getElementById('confessionInput');
