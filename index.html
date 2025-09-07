@@ -4,186 +4,266 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ado Sasuatu Untuak Adiak...</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #00A99D; /* Hijau Khas Minang */
             --secondary-color: #F7B733; /* Kuning Emas */
+            --text-light: #f0f0f0;
+            --bg-dark: #0f1414;
+            --bg-grad-start: #002d29;
         }
 
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
             font-family: 'Poppins', sans-serif;
             overflow: hidden;
+            background-color: var(--bg-dark);
+        }
+        
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--bg-grad-start) 0%, var(--bg-dark) 100%);
         }
 
         .screen {
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            width: 90%;
-            max-width: 500px;
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: transparent;
+            color: var(--text-light);
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            pointer-events: none;
         }
 
-        .hidden {
-            display: none;
+        .screen.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+        
+        .content-box {
+            text-align: center;
+            background-color: rgba(15, 20, 20, 0.75);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(0, 169, 157, 0.3);
+            backdrop-filter: blur(12px);
         }
 
         h1 {
-            font-size: 1.8em;
-            color: #333;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9em;
+            color: white;
             margin-bottom: 10px;
         }
         
         p {
              font-size: 1.1em;
-             color: #555;
-             margin-top: 0;
+             color: var(--text-light);
+             margin-top: 10px;
+             line-height: 1.6;
         }
 
         button {
-            padding: 12px 25px;
-            border: none;
+            padding: 12px 30px;
+            border: 2px solid var(--primary-color);
             border-radius: 50px;
             font-size: 1em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin: 5px;
+            margin: 10px;
+            background-color: transparent;
+            color: var(--primary-color);
         }
 
-        .start-btn, .yes-btn {
+        .action-btn {
             background-color: var(--primary-color);
             color: white;
+            border-color: var(--primary-color);
         }
-        .start-btn:hover, .yes-btn:hover {
-            background-color: #007D74;
+        
+        button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 0 25px rgba(0, 169, 157, 0.6);
             transform: scale(1.05);
         }
 
         #noButton {
-            background-color: #d32f2f; /* Merah Marun */
+            background-color: #7a7a7a;
             color: white;
+            border-color: #7a7a7a;
             position: absolute;
         }
 
         #confessionInput {
             width: 80%;
-            padding: 10px;
+            padding: 12px;
             margin-top: 20px;
             border-radius: 10px;
-            border: 2px solid #ddd;
+            border: 2px solid rgba(255,255,255,0.2);
+            background-color: rgba(0,0,0,0.3);
+            color: white;
             text-align: center;
             font-size: 1em;
         }
-
-        #submitConfession {
-            background-color: #ccc;
-            color: #888;
-            cursor: not-allowed;
-            margin-top: 15px;
-        }
-        #submitConfession:not(:disabled) {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
         
-        #progressContainer {
-            width: 100%;
-            background-color: #eee;
-            border-radius: 20px;
-            margin-top: 20px;
-        }
-        #progressBar {
-            width: 0%;
-            height: 30px;
-            background-color: var(--primary-color);
-            border-radius: 20px;
-            text-align: center;
-            line-height: 30px;
-            color: white;
-            transition: width 0.5s ease;
+        #submitConfession {
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
+    <canvas id="particle-canvas"></canvas>
 
-    <div class="screen" id="startScreen">
-        <img src="https://i.pinimg.com/originals/8c/8f/54/8c8f_543b5f7e7f22b82367f66a2e912c.gif" alt="Waving GIF" width="100">
-        <h1>Assalamualaikum Adiak Udaa Nan Kamek Jikok Iyo Tapikek !</h1>
-        <p>Ado game ciek untuak adiak. <br>Kalau iyo adiak urangnyo, cubo mainkan.</p>
-        <button class="start-btn" onclick="showScreen('gameScreen1')">Capek lah Lanjuik</button>
-    </div>
-
-    <div class="screen hidden" id="gameScreen1">
-        <img src="https://media.tenor.com/5JmS_A-S-cIAAAAi/tkthao219-bubududu.gif" alt="Teasing GIF" width="100">
-        <h1>Babak 1: Tuduhan</h1>
-        <p>Mandapek kaba dari urang-urang di Banduang, ado surang gadih nan di nagari urang acok mambuek uda - uda banduang tapikek. <br>Gadihnyo sadang mambaco ko mode e. Lai batua tu diak ?</p>
-        <button class="yes-btn" onclick="showScreen('gameScreen2')">Iyo, batua tu 🤫</button>
-        <button id="noButton">Indak do, salah urang maa</button>
-    </div>
-    
-    <div class="screen hidden" id="gameScreen2">
-        <h1>Babak 2: Pangakuan Pituah</h1>
-        <p>Bia labiah afdol, cubo ketik <br><b>"ambo emang agak lain"</b><br> di bawah ko untuak malanjuikkan.</p>
-        <input type="text" id="confessionInput" placeholder="Ketik di siko...">
-        <button id="submitConfession" disabled>Lanjuik!</button>
-    </div>
-
-    <div class="screen hidden" id="loadingScreen">
-        <h1>Manarawang Data...</h1>
-        <p id="loadingText">Mamastian pangakuan...</p>
-        <div id="progressContainer">
-            <div id="progressBar">0%</div>
+    <div class="screen active" id="startScreen">
+        <div class="content-box">
+            <h1>Assalamualaikum Adiak Udaa Nan Kamek Jikok Iyo Tapikek !</h1>
+            <p>Ado game ciek untuak adiak. <br>Kalau iyo adiak urangnyo, cubo mainkan.</p>
+            <button class="action-btn" onclick="showScreen('gameScreen1')">Capek lah Lanjuik</button>
         </div>
     </div>
 
-    <div class="screen hidden" id="finalScreen">
-        <img src="https://media1.tenor.com/m/Qy5ttwslK-IAAAAC/peach-and-goma-peach-goma.gif" alt="Blushing GIF" width="120">
-        <h1>Hasil Tarawangan Keluar:</h1>
-        <p style="font-size: 1.4em; font-weight: bold; color: var(--primary-color);">Status: Agak Lain Level Spesial</p>
-        <p><b>Artinyo:</b> Gadih minang nan di nagari urang, nan jahia atau nan indak, iyo mambuek uda uda banduang jadi... tapikek. Iko tuulah, ati-ati yo diak kadnuang. <br><br><b>Tolong tangguang jawab, yo.</b></p>
+    <div class="screen" id="gameScreen1">
+        <div class="content-box">
+            <h1>Babak 1: Tuduhan</h1>
+            <p>Mandapek kaba dari urang-urang di Banduang, ado surang gadih nan di nagari urang acok mambuek uda - uda banduang tapikek. <br>Gadihnyo sadang mambaco ko mode e. Lai batua tu diak ?</p>
+            <button class="action-btn" onclick="showScreen('gameScreen2')">Iyo, batua tu 🤫</button>
+            <button id="noButton">Indak do, salah urang maa</button>
+        </div>
+    </div>
+    
+    <div class="screen" id="gameScreen2">
+        <div class="content-box">
+            <h1>Babak 2: Pangakuan Pituah</h1>
+            <p>Bia labiah afdol, cubo ketik <br><b>"ambo emang agak lain"</b><br> di bawah ko untuak malanjuikkan.</p>
+            <input type="text" id="confessionInput" placeholder="Ketik di siko...">
+            <button class="action-btn" id="submitConfession" disabled>Lanjuik!</button>
+        </div>
+    </div>
+
+    <div class="screen" id="loadingScreen">
+         <div class="content-box">
+            <h1>Manarawang Data...</h1>
+            <p>Saba yo, alam semesta sadang bakarajo...</p>
+        </div>
+    </div>
+
+    <div class="screen" id="finalScreen">
+        <div class="content-box">
+            <h1>Hasil Tarawangan Keluar:</h1>
+            <p style="font-size: 1.4em; font-weight: bold; color: var(--primary-color);">Status: Agak Lain Level Spesial</p>
+            <p><b>Artinyo:</b> Gadih minang nan di nagari urang, nan janiah aia alun karuah jo nan indak, malah uda uda Banduang tapikek juo... tanang... Iko langka, Salam Gadih MinangKabau. <br><br><b>Tolong tangguang jawab, yo.</b></p>
+        </div>
     </div>
 
 
     <script>
-        // --- Navigasi Layar ---
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
+        // --- SCRIPT ANIMASI LATAR BELAKANG PARTIKEL ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-            if(screenId === 'loadingScreen') {
-                startLoading();
+        let particlesArray;
+
+        class Particle {
+            constructor(x, y, size, color, speedX, speedY) {
+                this.x = x; this.y = y; this.size = size; this.color = color; this.speedX = speedX; this.speedY = speedY;
+            }
+            draw() {
+                ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+                this.x += this.speedX; this.y += this.speedY;
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = Math.random() * 2 + 0.5;
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                let speedX = Math.random() * 0.4 - 0.2;
+                let speedY = Math.random() * 0.4 - 0.2;
+                let color = 'rgba(247, 183, 51, ' + (Math.random()*0.7 + 0.2) + ')'; // Warna Emas
+                particlesArray.push(new Particle(x, y, size, color, speedX, speedY));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        
+        initParticles();
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+
+        // --- SCRIPT LOGIKA GAME ---
+        let currentScreen = 'startScreen';
+        
+        function showScreen(screenId) {
+            const oldScreen = document.getElementById(currentScreen);
+            const newScreen = document.getElementById(screenId);
+
+            if (oldScreen) oldScreen.classList.remove('active');
+            if (newScreen) newScreen.classList.add('active');
+            
+            currentScreen = screenId;
+
+            if (screenId === 'loadingScreen') {
+                setTimeout(() => showScreen('finalScreen'), 3000); // Durasi loading
             }
         }
 
         // --- Logika Tombol Kabur ---
         const noButton = document.getElementById('noButton');
-        
         function runAway() {
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            noButton.style.top = `${Math.random() * (viewportHeight - noButton.offsetHeight)}px`;
-            noButton.style.left = `${Math.random() * (viewportWidth - noButton.offsetWidth)}px`;
+            const container = noButton.closest('.content-box');
+            const rect = container.getBoundingClientRect();
+            
+            // Posisi tombol relatif terhadap window, bukan container
+            const newTop = rect.top + (Math.random() * (rect.height - noButton.offsetHeight));
+            const newLeft = rect.left + (Math.random() * (rect.width - noButton.offsetWidth));
+
+            noButton.style.top = `${newTop}px`;
+            noButton.style.left = `${newLeft}px`;
         }
-        
-        // Event untuk desktop (saat kursor mendekat)
         noButton.addEventListener('mouseover', runAway);
-        
-        // --- BARIS INI SOLUSINYA ---
-        // Event untuk mobile (saat jari pertama kali menyentuh)
         noButton.addEventListener('touchstart', runAway);
         
         // --- Logika Level 2: Pengakuan ---
@@ -192,57 +272,12 @@
         const requiredText = "ambo emang agak lain";
 
         confessionInput.addEventListener('input', () => {
-            if (confessionInput.value.trim().toLowerCase() === requiredText) {
-                submitConfession.disabled = false;
-            } else {
-                submitConfession.disabled = true;
-            }
+            submitConfession.disabled = confessionInput.value.trim().toLowerCase() !== requiredText;
         });
 
         submitConfession.addEventListener('click', () => {
-            if (!submitConfession.disabled) {
-                showScreen('loadingScreen');
-            }
+            if (!submitConfession.disabled) showScreen('loadingScreen');
         });
-
-        // --- Logika Loading Palsu ---
-        function startLoading() {
-            const progressBar = document.getElementById('progressBar');
-            const loadingText = document.getElementById('loadingText');
-            let width = 0;
-
-            setTimeout(() => {
-                width = 25;
-                progressBar.style.width = width + '%';
-                progressBar.textContent = width + '%';
-                loadingText.textContent = "Mancocokkan data...";
-            }, 1000);
-
-            setTimeout(() => {
-                width = 60;
-                progressBar.style.width = width + '%';
-                progressBar.textContent = width + '%';
-                loadingText.textContent = "Manghubungi urang pintar...";
-            }, 2500);
-
-            setTimeout(() => {
-                width = 99;
-                progressBar.style.width = width + '%';
-                progressBar.textContent = width + '%';
-                loadingText.textContent = "Menyiapkan hasil...";
-            }, 4000);
-            
-            setTimeout(() => {
-                width = 100;
-                progressBar.style.width = width + '%';
-                progressBar.textContent = "Selesai!";
-            }, 5000);
-
-            setTimeout(() => {
-                showScreen('finalScreen');
-            }, 5500);
-        }
     </script>
 </body>
 </html>
-
